@@ -1,6 +1,7 @@
 (ns duct.handler.sql-test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer :all]
+            [duct.database.sql :as db]
             [duct.handler.sql :as sql]
             [integrant.core :as ig]))
 
@@ -14,7 +15,7 @@
 
 (deftest get-select-test
   (let [config  {::sql/get-select
-                 {:db      (create-database)
+                 {:db      (db/->Boundary (create-database))
                   :request '{{:keys [post-id]} :route-params}
                   :query   '["SELECT body FROM comments WHERE post_id = ?" post-id]}}
         handler (::sql/get-select (ig/init config))]

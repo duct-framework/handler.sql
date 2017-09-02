@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha19"]
                  [org.clojure/java.jdbc "0.7.0"]
                  [duct/core "0.6.1"]
+                 [duct/database.sql "0.1.0"]
                  [integrant "0.6.1"]
                  [ring/ring-core "1.6.2"]]
   :profiles
