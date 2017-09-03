@@ -13,11 +13,11 @@
     (jdbc/insert! :comments {:id 1, :post_id 1, :body "Great!"})
     (jdbc/insert! :comments {:id 2, :post_id 1, :body "Rubbish!"})))
 
-(deftest get-select-test
-  (let [config  {::sql/get-select
+(deftest select-test
+  (let [config  {::sql/select
                  {:db      (db/->Boundary (create-database))
                   :request '{{:keys [post-id]} :route-params}
                   :query   '["SELECT body FROM comments WHERE post_id = ?" post-id]}}
-        handler (::sql/get-select (ig/init config))]
+        handler (::sql/select (ig/init config))]
     (is (= (handler {:request-method :get, :route-params {:post-id "1"}})
            {:status 200, :headers {}, :body [{:body "Great!"} {:body "Rubbish!"}]}))))

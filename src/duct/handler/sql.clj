@@ -3,7 +3,7 @@
             [integrant.core :as ig]
             [ring.util.response :as resp]))
 
-(defmethod ig/init-key ::get-select [_ {:keys [db request query]}]
+(defmethod ig/init-key ::select [_ {:keys [db request query]}]
   (let [f (eval `(fn [{spec# :spec}]
                    (fn [~request]
                      (resp/response (jdbc/query spec# ~query)))))]
