@@ -19,5 +19,16 @@
                   :request '{{:keys [post-id]} :route-params}
                   :query   '["SELECT body FROM comments WHERE post_id = ?" post-id]}}
         handler (::sql/select (ig/init config))]
-    (is (= (handler {:request-method :get, :route-params {:post-id "1"}})
+    (is (= (handler {:route-params {:post-id "1"}})
            {:status 200, :headers {}, :body [{:body "Great!"} {:body "Rubbish!"}]}))))
+
+(deftest select-one-test
+  (let [config  {::sql/select-one
+                 {:db      (db/->Boundary (create-database))
+                  :request '{{:keys [id]} :route-params}
+                  :query   '["SELECT subject, body FROM posts WHERE id = ?" id]}}
+        handler (::sql/select-one (ig/init config))]
+    (is (= (handler {:route-params {:id "1"}})
+           {:status 200, :headers {}, :body {:subject "Test", :body "Testing 1, 2, 3."}}))
+    (is (= (handler {:route-params {:id "2"}})
+           {:status 404, :headers {}, :body {:error :not-found}}))))
