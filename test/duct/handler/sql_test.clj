@@ -14,13 +14,22 @@
     (jdbc/insert! :comments {:id 2, :post_id 1, :body "Rubbish!"})))
 
 (deftest select-test
-  (let [config  {::sql/select
-                 {:db      (db/->Boundary (create-database))
-                  :request '{{:keys [post-id]} :route-params}
-                  :query   '["SELECT body FROM comments WHERE post_id = ?" post-id]}}
-        handler (::sql/select (ig/init config))]
-    (is (= (handler {:route-params {:post-id "1"}})
-           {:status 200, :headers {}, :body [{:body "Great!"} {:body "Rubbish!"}]}))))
+  (testing "with destructuring"
+    (let [config  {::sql/select
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [post-id]} :route-params}
+                    :query   '["SELECT body FROM comments WHERE post_id = ?" post-id]}}
+          handler (::sql/select (ig/init config))]
+      (is (= (handler {:route-params {:post-id "1"}})
+             {:status 200, :headers {}, :body [{:body "Great!"} {:body "Rubbish!"}]}))))
+
+  (testing "without destructuring"
+    (let [config  {::sql/select
+                   {:db      (db/->Boundary (create-database))
+                    :query   '["SELECT subject FROM posts"]}}
+          handler (::sql/select (ig/init config))]
+      (is (= (handler {})
+             {:status 200, :headers {}, :body [{:subject "Test"}]})))))
 
 (deftest select-one-test
   (let [config  {::sql/select-one
