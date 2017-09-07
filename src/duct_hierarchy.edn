@@ -1,0 +1,2 @@
+{:duct.handler.sql/select     [:duct.module.sql/requires-db]
+ :duct.handler.sql/select-one [:duct.module.sql/requires-db]}
