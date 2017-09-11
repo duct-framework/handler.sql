@@ -41,3 +41,15 @@
            {:status 200, :headers {}, :body {:subject "Test", :body "Testing 1, 2, 3."}}))
     (is (= (handler {:route-params {:id "2"}})
            {:status 404, :headers {}, :body {:error :not-found}}))))
+
+(deftest execute-test
+  (let [db      (create-database)
+        config  {::sql/execute
+                 {:db      (db/->Boundary db)
+                  :request '{{:keys [id body]} :params}
+                  :query   '["UPDATE comments SET body = ? WHERE id = ?" body id]}}
+        handler (::sql/execute (ig/init config))]
+    (is (= (handler {:params {:id "1", :body "foo"}})
+           {:status 204, :headers {}, :body nil}))
+    (is (= (jdbc/query db "SELECT * FROM comments WHERE id = 1")
+           [{:id 1, :post_id 1, :body "foo"}]))))
