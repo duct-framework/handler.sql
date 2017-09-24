@@ -5,13 +5,11 @@
             [ring.util.response :as resp]))
 
 (defprotocol RelationalDatabase
-  (query    [db sql])
-  (execute! [db sql]))
+  (query [db query]))
 
 (extend-protocol RelationalDatabase
   duct.database.sql.Boundary
-  (query    [{:keys [spec]} sql] (jdbc/query spec sql))
-  (execute! [{:keys [spec]} sql] (jdbc/execute! spec sql)))
+  (query [{:keys [spec]} query] (jdbc/query spec query)))
 
 (defmethod ig/init-key ::select [_ {:keys [db request query] :or {request '_}}]
   (let [f (eval `(fn [db#]
@@ -25,11 +23,4 @@
                      (if-let [result# (first (query db# ~query))]
                        (resp/response result#)
                        (resp/not-found {:error :not-found})))))]
-    (f db)))
-
-(defmethod ig/init-key ::execute [_ {:keys [db request query] :or {request '_}}]
-  (let [f (eval `(fn [db#]
-                   (fn [~request]
-                     (execute! db# ~query)
-                     {:status 204, :headers {}, :body nil})))]
     (f db)))
