@@ -29,15 +29,37 @@
                     :query   '["SELECT subject FROM posts"]}}
           handler (::sql/select (ig/init config))]
       (is (= (handler {})
-             {:status 200, :headers {}, :body [{:subject "Test"}]})))))
+             {:status 200, :headers {}, :body [{:subject "Test"}]}))))
+
+  (testing "with renamed keys"
+    (let [config  {::sql/select
+                   {:db      (db/->Boundary (create-database))
+                    :query   '["SELECT subject, body FROM posts"]
+                    :rename  {:subject :post/subject}}}
+          handler (::sql/select (ig/init config))]
+      (is (= (handler {})
+             {:status 200, :headers {}, :body [{:post/subject "Test"
+                                                :body "Testing 1, 2, 3."}]})))))
 
 (deftest select-one-test
-  (let [config  {::sql/select-one
-                 {:db      (db/->Boundary (create-database))
-                  :request '{{:keys [id]} :route-params}
-                  :query   '["SELECT subject, body FROM posts WHERE id = ?" id]}}
-        handler (::sql/select-one (ig/init config))]
-    (is (= (handler {:route-params {:id "1"}})
-           {:status 200, :headers {}, :body {:subject "Test", :body "Testing 1, 2, 3."}}))
-    (is (= (handler {:route-params {:id "2"}})
-           {:status 404, :headers {}, :body {:error :not-found}}))))
+  (testing "with destructuring"
+    (let [config  {::sql/select-one
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [id]} :route-params}
+                    :query   '["SELECT subject, body FROM posts WHERE id = ?" id]}}
+          handler (::sql/select-one (ig/init config))]
+      (is (= (handler {:route-params {:id "1"}})
+             {:status 200, :headers {}, :body {:subject "Test", :body "Testing 1, 2, 3."}}))
+      (is (= (handler {:route-params {:id "2"}})
+             {:status 404, :headers {}, :body {:error :not-found}}))))
+
+  (testing "with renamed keys"
+    (let [config  {::sql/select-one
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [id]} :route-params}
+                    :query   '["SELECT subject, body FROM posts WHERE id = ?" id]
+                    :rename  {:subject :post/subject}}}
+          handler (::sql/select-one (ig/init config))]
+      (is (= (handler {:route-params {:id "1"}})
+             {:status 200, :headers {}, :body {:post/subject "Test"
+                                               :body "Testing 1, 2, 3."}})))))

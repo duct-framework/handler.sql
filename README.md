@@ -29,14 +29,27 @@ each time:
 In the above example, a [composite key][] is used to provide a unique
 identifier for the handler.
 
+The `:db` option should be a `duct.database.sql.Boundary` record, and
+the `:query` option should be a [clojure.java.jdbc][] query vector.
+
 If you want to change the query based on the request, you can
-destructure the parameters you want:
+destructure the parameters you want in the `:request` option:
 
 ```edn
 {[:duct.handler.sql/select-one :example.handler.product/find]
  {:db      #ig/ref :duct.database/sql
   :request {{:keys [id]} :route-params}
   :query   ["SELECT * FROM products WHERE id = ?" id]}}
+```
+
+Finally, there is the `:rename` option, which allows keys to be
+renamed:
+
+```edn
+{[:duct.handler.sql/select-one :example.handler.product/find]
+ {:db     #ig/ref :duct.database/sql
+  :query  ["SELECT id, name FROM products"]
+  :rename {:id :product/id, :name :product/name}}}
 ```
 
 There are currently two different types of handler key:
@@ -53,7 +66,7 @@ Together with a router, the configuration might look something like:
  :duct.module.web/api {}
  :duct.module/sql     {}
 
- :duct.moduke/ataraxy
+ :duct.module/ataraxy
  {[:get "/products"]     [:product/list]
   [:get "/products/" id] [:product/find ^uuid id]}
 
@@ -69,6 +82,7 @@ Together with a router, the configuration might look something like:
 
 [ataraxy]: https://github.com/duct-framework/module.ataraxy
 [composite key]: https://github.com/weavejester/integrant#composite-keys
+[clojure.java.jdbc]: https://github.com/clojure/java.jdbc
 
 ## Caveats
 
