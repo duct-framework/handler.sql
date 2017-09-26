@@ -1,5 +1,7 @@
 # Duct handler.sql
 
+[![Build Status](https://travis-ci.org/duct-framework/handler.sql.svg?branch=master)](https://travis-ci.org/duct-framework/handler.sql)
+
 A [Duct][] library that provides a way of constructing simple [Ring][]
 handler functions that execute SQL expressions.
 
