@@ -50,6 +50,17 @@
       (is (= (handler {})
              {:status 200, :headers {}, :body [{:id   1
                                                 :href "/posts/1"
+                                                :subject "Test"}]}))))
+
+  (testing "with removed keys"
+    (let [config  {::sql/select
+                   {:db      (db/->Boundary (create-database))
+                    :query   '["SELECT id, subject FROM posts"]
+                    :hrefs   {:href "/posts{/id}"}
+                    :remove  [:id]}}
+          handler (::sql/select (ig/init config))]
+      (is (= (handler {})
+             {:status 200, :headers {}, :body [{:href "/posts/1"
                                                 :subject "Test"}]})))))
 
 (deftest select-one-test
@@ -85,4 +96,16 @@
       (is (= (handler {:route-params {:id "1"}})
              {:status 200, :headers {}, :body {:id      1
                                                :href    "/posts/1"
+                                               :subject "Test"}}))))
+
+  (testing "with removed keys"
+    (let [config  {::sql/select-one
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [id]} :route-params}
+                    :query   '["SELECT id, subject FROM posts WHERE id = ?" id]
+                    :hrefs   {:href "/posts{/id}"}
+                    :remove  [:id]}}
+          handler (::sql/select-one (ig/init config))]
+      (is (= (handler {:route-params {:id "1"}})
+             {:status 200, :headers {}, :body {:href "/posts/1"
                                                :subject "Test"}})))))

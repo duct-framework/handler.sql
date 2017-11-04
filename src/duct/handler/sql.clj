@@ -20,12 +20,18 @@
 (defn- assoc-hrefs [result hrefs]
   (reduce-kv #(assoc %1 %2 (uri-template %3 result)) result hrefs))
 
-(defn transform-result [result {:keys [rename hrefs]}]
-  (-> result (set/rename-keys rename) (assoc-hrefs hrefs)))
+(defn- remove-keys [result keys]
+  (apply dissoc result keys))
+
+(defn transform-result [result {:keys [hrefs remove rename]}]
+  (-> result
+      (assoc-hrefs hrefs)
+      (remove-keys remove)
+      (set/rename-keys rename)))
 
 (defmethod ig/init-key ::select
   [_ {:as opts :keys [db request query] :or {request '_}}]
-  (let [opts (select-keys opts [:rename :hrefs])
+  (let [opts (select-keys opts [:hrefs :remove :rename])
         f    (eval `(fn [db#]
                       (fn [~request]
                         (->> (query db# ~query)
@@ -35,7 +41,7 @@
 
 (defmethod ig/init-key ::select-one
   [_ {:as opts :keys [db request query] :or {request '_}}]
-  (let [opts (select-keys opts [:rename :hrefs])
+  (let [opts (select-keys opts [:hrefs :remove :rename])
         f    (eval `(fn [db#]
                       (fn [~request]
                         (if-let [result# (first (query db# ~query))]
