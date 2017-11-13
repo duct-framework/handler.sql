@@ -29,22 +29,22 @@
       (remove-keys remove)
       (set/rename-keys rename)))
 
-(defmethod ig/init-key ::select
-  [_ {:as opts :keys [db request query] :or {request '_}}]
+(defmethod ig/init-key ::query
+  [_ {:as opts :keys [db request sql] :or {request '_}}]
   (let [opts (select-keys opts [:hrefs :remove :rename])
         f    (eval `(fn [db#]
                       (fn [~request]
-                        (->> (query db# ~query)
+                        (->> (query db# ~sql)
                              (map #(transform-result % ~opts))
                              (resp/response)))))]
     (f db)))
 
-(defmethod ig/init-key ::select-one
-  [_ {:as opts :keys [db request query] :or {request '_}}]
+(defmethod ig/init-key ::query-one
+  [_ {:as opts :keys [db request sql] :or {request '_}}]
   (let [opts (select-keys opts [:hrefs :remove :rename])
         f    (eval `(fn [db#]
                       (fn [~request]
-                        (if-let [result# (first (query db# ~query))]
+                        (if-let [result# (first (query db# ~sql))]
                           (resp/response (transform-result result# ~opts))
                           (resp/not-found {:error :not-found})))))]
     (f db)))
