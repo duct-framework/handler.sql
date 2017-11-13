@@ -44,14 +44,36 @@ destructure the parameters you want in the `:request` option:
   :query   ["SELECT * FROM products WHERE id = ?" id]}}
 ```
 
-Finally, there is the `:rename` option, which allows keys to be
-renamed:
+The response can also be altered. The `:rename` option is available
+for renaming keys returned in the result set:
 
 ```edn
 {[:duct.handler.sql/select-one :example.handler.product/find]
  {:db     #ig/ref :duct.database/sql
   :query  ["SELECT id, name FROM products"]
   :rename {:id :product/id, :name :product/name}}}
+```
+
+The `:hrefs` option adds hypertext references based on [URI
+Templates][]:
+
+```edn
+{[:duct.handler.sql/select-one :example.handler.product/find]
+ {:db    #ig/ref :duct.database/sql
+  :query ["SELECT id, name FROM products"]
+  :hrefs {:self "/products/{id}"}}}
+```
+
+Finally, the `:remove` key allows keys to be removed from the
+response. This is useful if you want a key to be used in a href, but
+not to show up in the final response:
+
+```edn
+{[:duct.handler.sql/select-one :example.handler.product/find]
+ {:db     #ig/ref :duct.database/sql
+  :query  ["SELECT id, name FROM products"]
+  :hrefs  {:self "/products/{id}"}
+  :remove [:id]}}
 ```
 
 There are currently two different types of handler key:
@@ -85,6 +107,7 @@ Together with a router, the configuration might look something like:
 [ataraxy]: https://github.com/duct-framework/module.ataraxy
 [composite key]: https://github.com/weavejester/integrant#composite-keys
 [clojure.java.jdbc]: https://github.com/clojure/java.jdbc
+[uri templates]: https://tools.ietf.org/html/rfc6570
 
 ## Caveats
 
