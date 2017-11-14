@@ -109,3 +109,20 @@
       (is (= (handler {:route-params {:id "1"}})
              {:status 200, :headers {}, :body {:href "/posts/1"
                                                :subject "Test"}})))))
+
+(deftest execute-test
+  (let [db      (create-database)
+        config  {::sql/execute
+                 {:db      (db/->Boundary db)
+                  :request '{{:keys [id]} :route-params, {:strs [body]} :post-params}
+                  :sql     '["UPDATE comments SET body = ? WHERE id = ?" body id]}}
+        handler (::sql/execute (ig/init config))]
+    (testing "valid update"
+      (is (= (handler {:route-params {:id "1"}, :post-params {"body" "Average"}})
+             {:status 204, :headers {}, :body nil}))
+      (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 1])
+             [{:id 1, :post_id 1, :body "Average"}])))
+
+    (testing "update of invalid ID"
+      (is (= (handler {:route-params {:id "3"}, :post-params {"body" "Average"}})
+             {:status 404, :headers {}, :body {:error :not-found}})))))

@@ -8,11 +8,13 @@
             [uritemplate-clj.core :as ut]))
 
 (defprotocol RelationalDatabase
-  (query [db query]))
+  (query    [db sql])
+  (execute! [db sql]))
 
 (extend-protocol RelationalDatabase
   duct.database.sql.Boundary
-  (query [{:keys [spec]} query] (jdbc/query spec query)))
+  (query    [{:keys [spec]} sql] (jdbc/query spec sql))
+  (execute! [{:keys [spec]} sql] (jdbc/execute! spec sql)))
 
 (defn- uri-template [template values]
   (ut/uritemplate template (walk/stringify-keys values)))
@@ -47,4 +49,13 @@
                         (if-let [result# (first (query db# ~sql))]
                           (resp/response (transform-result result# ~opts))
                           (resp/not-found {:error :not-found})))))]
+    (f db)))
+
+(defmethod ig/init-key ::execute
+  [_ {:as opts :keys [db request sql] :or {request '_}}]
+  (let [f (eval `(fn [db#]
+                   (fn [~request]
+                     (if (zero? (first (execute! db# ~sql)))
+                       (resp/not-found {:error :not-found})
+                       {:status 204, :headers {}, :body nil}))))]
     (f db)))
