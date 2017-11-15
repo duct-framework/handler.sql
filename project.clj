@@ -8,6 +8,7 @@
                  [duct/core "0.6.1"]
                  [duct/database.sql "0.1.0"]
                  [integrant "0.6.1"]
+                 [medley "1.0.0"]
                  [ring/ring-core "1.6.3"]
                  [uritemplate-clj "1.1.1"]]
   :profiles

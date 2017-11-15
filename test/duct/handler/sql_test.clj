@@ -7,8 +7,8 @@
 
 (defn- create-database []
   (doto {:connection (jdbc/get-connection {:connection-uri "jdbc:sqlite:"})}
-    (jdbc/execute! "CREATE TABLE posts    (id INT PRIMARY KEY, subject TEXT, body TEXT)")
-    (jdbc/execute! "CREATE TABLE comments (id INT PRIMARY KEY, post_id INT,  body TEXT)")
+    (jdbc/execute! "CREATE TABLE posts (id INTEGER PRIMARY KEY, subject TEXT, body TEXT)")
+    (jdbc/execute! "CREATE TABLE comments (id INTEGER PRIMARY KEY, post_id INT, body TEXT)")
     (jdbc/insert! :posts    {:id 1, :subject "Test", :body "Testing 1, 2, 3."})
     (jdbc/insert! :comments {:id 1, :post_id 1, :body "Great!"})
     (jdbc/insert! :comments {:id 2, :post_id 1, :body "Rubbish!"})))
@@ -114,15 +114,28 @@
   (let [db      (create-database)
         config  {::sql/execute
                  {:db      (db/->Boundary db)
-                  :request '{{:keys [id]} :route-params, {:strs [body]} :post-params}
+                  :request '{{:keys [id]} :route-params, {:strs [body]} :form-params}
                   :sql     '["UPDATE comments SET body = ? WHERE id = ?" body id]}}
         handler (::sql/execute (ig/init config))]
     (testing "valid update"
-      (is (= (handler {:route-params {:id "1"}, :post-params {"body" "Average"}})
+      (is (= (handler {:route-params {:id "1"}, :form-params {"body" "Average"}})
              {:status 204, :headers {}, :body nil}))
       (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 1])
              [{:id 1, :post_id 1, :body "Average"}])))
 
     (testing "update of invalid ID"
-      (is (= (handler {:route-params {:id "3"}, :post-params {"body" "Average"}})
+      (is (= (handler {:route-params {:id "3"}, :form-params {"body" "Average"}})
              {:status 404, :headers {}, :body {:error :not-found}})))))
+
+(deftest insert-test
+  (let [db      (create-database)
+        config  {::sql/insert
+                 {:db       (db/->Boundary db)
+                  :request  '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
+                  :sql      '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]
+                  :location "/comments{/last_insert_rowid}"}}
+        handler (::sql/insert (ig/init config))]
+    (is (= (handler {:route-params {:pid "1"}, :form-params {"body" "New comment"}})
+           {:status 201, :headers {"Location" "/comments/3"}, :body nil}))
+    (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 3])
+           [{:id 3, :post_id 1, :body "New comment"}]))))
