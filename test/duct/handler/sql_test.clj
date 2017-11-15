@@ -52,6 +52,19 @@
                                                 :href "/posts/1"
                                                 :subject "Test"}]}))))
 
+  (testing "with hrefs from request vars"
+    (let [config  {::sql/query
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [pid]} :route-params}
+                    :sql     ["SELECT id, body FROM comments"]
+                    :hrefs   {:href "/posts{/pid}/comments{/id}"}}}
+          handler (::sql/query (ig/init config))]
+      (is (= (handler {:route-params {:pid "1"}})
+             {:status  200
+              :headers {}
+              :body    [{:id 1, :href "/posts/1/comments/1", :body "Great!"}
+                        {:id 2, :href "/posts/1/comments/2", :body "Rubbish!"}]}))))
+
   (testing "with removed keys"
     (let [config  {::sql/query
                    {:db     (db/->Boundary (create-database))
@@ -96,6 +109,17 @@
       (is (= (handler {:route-params {:id "1"}})
              {:status 200, :headers {}, :body {:id      1
                                                :href    "/posts/1"
+                                               :subject "Test"}}))))
+
+  (testing "with hrefs from request vars"
+    (let [config  {::sql/query-one
+                   {:db      (db/->Boundary (create-database))
+                    :request '{{:keys [id]} :route-params}
+                    :sql     '["SELECT subject FROM posts WHERE id = ?" id]
+                    :hrefs   {:href "/posts{/id}"}}}
+          handler (::sql/query-one (ig/init config))]
+      (is (= (handler {:route-params {:id "1"}})
+             {:status 200, :headers {}, :body {:href "/posts/1"
                                                :subject "Test"}}))))
 
   (testing "with removed keys"

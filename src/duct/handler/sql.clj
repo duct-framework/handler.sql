@@ -32,24 +32,33 @@
        (map (juxt (comp keyword name) identity))
        (into {})))
 
-(defn uri-template [template values]
+(defn- uri-template [template values]
   (ut/uritemplate template (sanitize-keys (walk/stringify-keys values))))
 
-(defn- assoc-hrefs [result hrefs]
-  (reduce-kv #(assoc %1 %2 (uri-template %3 result)) result hrefs))
+(defn- assoc-hrefs [result hrefs request-vars]
+  (let [vars (merge request-vars result)]
+    (reduce-kv #(assoc %1 %2 (uri-template %3 vars)) result hrefs)))
 
 (defn- remove-keys [result keys]
   (apply dissoc result keys))
 
-(defn transform-result [result {:keys [hrefs remove rename]}]
+(defn- transform-opts-expr [{:keys [request] :as opts}]
+  (-> opts
+      (select-keys [:hrefs :remove :rename])
+      (assoc :request-vars (request-capture-expr opts))))
+
+(defn transform-result [result {:keys [hrefs remove rename request-vars]}]
   (-> result
-      (assoc-hrefs hrefs)
+      (assoc-hrefs hrefs request-vars)
       (remove-keys remove)
       (set/rename-keys rename)))
 
+(defn generated-uri [result {:keys [location request-vars] :as opts}]
+  (uri-template location (merge request-vars result)))
+
 (defmethod ig/init-key ::query
   [_ {:as opts :keys [db request sql] :or {request '_}}]
-  (let [opts (select-keys opts [:hrefs :remove :rename])
+  (let [opts (transform-opts-expr opts)
         f    (eval `(fn [db#]
                       (fn [~request]
                         (->> (query db# ~sql)
@@ -59,7 +68,7 @@
 
 (defmethod ig/init-key ::query-one
   [_ {:as opts :keys [db request sql] :or {request '_}}]
-  (let [opts (select-keys opts [:hrefs :remove :rename])
+  (let [opts (transform-opts-expr opts)
         f    (eval `(fn [db#]
                       (fn [~request]
                         (if-let [result# (first (query db# ~sql))]
@@ -78,10 +87,10 @@
 
 (defmethod ig/init-key ::insert
   [_ {:as opts :keys [db location request sql] :or {request '_}}]
-  (let [f (eval `(fn [db#]
-                   (fn [~request]
-                     (->> (insert! db# ~sql)
-                          (merge ~(request-capture-expr request))
-                          (uri-template ~location)
-                          (resp/created)))))]
+  (let [opts {:location location, :request-vars (request-capture-expr request)}
+        f    (eval `(fn [db#]
+                      (fn [~request]
+                        (-> (insert! db# ~sql)
+                            (generated-uri ~opts)
+                            (resp/created)))))]
     (f db)))
