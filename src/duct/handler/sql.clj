@@ -23,6 +23,15 @@
 (defn- sanitize-keys [result]
   (m/map-keys #(str/replace % #"[^\w]" "") result))
 
+(defn- find-symbols [x]
+  (filter symbol? (tree-seq coll? seq x)))
+
+(defn- request-capture-expr [req]
+  (->> (find-symbols req)
+       (remove #{'_})
+       (map (juxt (comp keyword name) identity))
+       (into {})))
+
 (defn uri-template [template values]
   (ut/uritemplate template (sanitize-keys (walk/stringify-keys values))))
 
@@ -72,6 +81,7 @@
   (let [f (eval `(fn [db#]
                    (fn [~request]
                      (->> (insert! db# ~sql)
+                          (merge ~(request-capture-expr request))
                           (uri-template ~location)
                           (resp/created)))))]
     (f db)))
