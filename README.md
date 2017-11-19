@@ -12,7 +12,7 @@ handler functions that execute SQL expressions.
 
 To install, add the following to your project `:dependencies`:
 
-    [duct/handler.sql "0.2.0"]
+    [duct/handler.sql "0.3.0"]
 
 ## Usage
 
