@@ -1,2 +1,5 @@
-{:duct.handler.sql/select     [:duct.module.sql/requires-db]
- :duct.handler.sql/select-one [:duct.module.sql/requires-db]}
+{:duct.handler/sql           [:duct/handler]
+ :duct.handler.sql/query     [:duct.handler/sql :duct.module.sql/requires-db]
+ :duct.handler.sql/query-one [:duct.handler/sql :duct.module.sql/requires-db]
+ :duct.handler.sql/insert    [:duct.handler/sql :duct.module.sql/requires-db]
+ :duct.handler.sql/execute   [:duct.handler/sql :duct.module.sql/requires-db]}

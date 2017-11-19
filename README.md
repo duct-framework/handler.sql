@@ -167,31 +167,29 @@ something like:
    [:product/destroy ^uuid id]}}
 
  [:duct.handler.sql/query :example.handler.product/list]
- {:db    #ig/ref :duct.database/sql
-  :query ["SELECT * FROM products"]}
+ {:sql ["SELECT * FROM products"]}
 
  [:duct.handler.sql/query-one :example.handler.product/find]
- {:db      #ig/ref :duct.database/sql
-  :request {[_ id] :ataraxy/result}
-  :query   ["SELECT * FROM products WHERE id = ?" id]}
+ {:request {[_ id] :ataraxy/result}
+  :sql     ["SELECT * FROM products WHERE id = ?" id]}
   
  {[:duct.handler.sql/insert :example.handler.product/create]
- {:db       #ig/ref :duct.database/sql
-  :request  {[_ name] :ataraxy/result}
+ {:request  {[_ name] :ataraxy/result}
   :sql      ["INSERT INTO products (name) VALUES (?)" name]
   :location "/products{/last_insert_rowid}"}}
 
 {[:duct.handler.sql/execute :example.handler.product/update]
- {:db       #ig/ref :duct.database/sql
-  :request  {[_ id name] :ataraxy/result}
-  :sql      ["UPDATE products SET name = ? WHERE id = ?" name id]}
+ {:request {[_ id name] :ataraxy/result}
+  :sql     ["UPDATE products SET name = ? WHERE id = ?" name id]}
   
  [:duct.handler.sql/execute :example.handler.product/destroy]
- {:db       #ig/ref :duct.database/sql
-  :request  {[_ id] :ataraxy/result}
-  :sql      ["DELETE FROM products WHERE id = ?" id]}}}
+ {:request {[_ id] :ataraxy/result}
+  :sql     ["DELETE FROM products WHERE id = ?" id]}}}
 ```
 
+Note that the `:db` key can be omitted in this case, because the
+`:duct.module/sql` module will automatically populate the handlers
+with a database connection.
 
 ## Caveats
 
