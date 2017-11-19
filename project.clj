@@ -1,6 +1,6 @@
 (defproject duct/handler.sql "0.3.0"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Duct library for building simple database-driven handlers"
+  :url "https://github.com/duct-framework/handler.sql"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-beta4"]
