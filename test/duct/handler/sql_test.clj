@@ -161,14 +161,27 @@
              {:status 404, :headers {}, :body {:error :not-found}})))))
 
 (deftest insert-test
-  (let [db      (create-database)
-        config  {::sql/insert
-                 {:db       (db/->Boundary db)
-                  :request  '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
-                  :sql      '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]
-                  :location "/posts{/pid}/comments{/last_insert_rowid}"}}
-        handler (::sql/insert (ig/init config))]
-    (is (= (handler {:route-params {:pid "1"}, :form-params {"body" "New comment"}})
-           {:status 201, :headers {"Location" "/posts/1/comments/3"}, :body nil}))
-    (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 3])
-           [{:id 3, :post_id 1, :body "New comment"}]))))
+  (testing "with location"
+    (let [db      (create-database)
+          config  {::sql/insert
+                   {:db       (db/->Boundary db)
+                    :request  '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
+                    :sql      '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]
+                    :location "/posts{/pid}/comments{/last_insert_rowid}"}}
+          handler (::sql/insert (ig/init config))]
+      (is (= (handler {:route-params {:pid "1"}, :form-params {"body" "New comment"}})
+             {:status 201, :headers {"Location" "/posts/1/comments/3"}, :body nil}))
+      (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 3])
+             [{:id 3, :post_id 1, :body "New comment"}]))))
+
+  (testing "without location"
+    (let [db     (create-database)
+          config {::sql/insert
+                  {:db      (db/->Boundary db)
+                   :request '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
+                   :sql     '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]}}
+          handler (::sql/insert (ig/init config))]
+      (is (= (handler {:route-params {:pid "1"}, :form-params {"body" "New comment"}})
+             {:status 201, :headers {}, :body nil}))
+      (is (= (jdbc/query db ["SELECT * FROM comments WHERE id = ?" 3])
+             [{:id 3, :post_id 1, :body "New comment"}])))))

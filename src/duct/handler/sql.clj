@@ -88,9 +88,14 @@
 (defmethod ig/init-key ::insert
   [_ {:as opts :keys [db location request sql] :or {request '_}}]
   (let [opts {:location location, :request-vars (request-capture-expr request)}
-        f    (eval `(fn [db#]
-                      (fn [~request]
-                        (-> (insert! db# ~sql)
-                            (generated-uri ~opts)
-                            (resp/created)))))]
+        f    (eval (if location
+                     `(fn [db#]
+                        (fn [~request]
+                          (-> (insert! db# ~sql)
+                              (generated-uri ~opts)
+                              (resp/created))))
+                     `(fn [db#]
+                        (fn [~request]
+                          (insert! db# ~sql)
+                          {:status 201, :headers {}, :body nil}))))]
     (f db)))
