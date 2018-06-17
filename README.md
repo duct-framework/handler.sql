@@ -75,7 +75,7 @@ Templates][]:
 ```
 
 The `:hrefs` key takes template parameters from the result fields, and
-from the requst destructuring.
+from the request destructuring.
 
 Finally, the `:remove` key allows keys to be removed from the
 response. This is useful if you want a key to be used in a href, but
