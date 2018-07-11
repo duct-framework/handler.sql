@@ -42,7 +42,7 @@ In the above example, a [composite key][] is used to provide a unique
 identifier for the handler.
 
 The `:db` option should be a `duct.database.sql.Boundary` record, and
-the `:query` option should be a [clojure.java.jdbc][] query vector.
+the `:sql` option should be a [clojure.java.jdbc][] query vector.
 
 If you want to change the query based on the request, you can
 destructure the parameters you want in the `:request` option:
