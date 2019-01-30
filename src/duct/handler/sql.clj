@@ -56,6 +56,11 @@
 (defn generated-uri [result {:keys [location request-vars] :as opts}]
   (uri-template location (merge request-vars result)))
 
+(defmethod ig/prep-key :duct.handler/sql [_ opts]
+  (if (:db opts)
+    opts
+    (assoc opts :db (ig/ref :duct.database/sql))))
+
 (defmethod ig/init-key ::query
   [_ {:as opts :keys [db request sql] :or {request '_}}]
   (let [opts (transform-opts-expr opts)

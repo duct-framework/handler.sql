@@ -22,6 +22,43 @@
   (isa? ::sql/execute   :duct.module.sql/requires-db)
   (isa? ::sql/insert    :duct.module.sql/requires-db))
 
+(deftest prep-test
+  (testing "query"
+    (is (= (ig/prep {::sql/query
+                     {:sql ["SELECT * FROM comments"]}})
+           {::sql/query
+            {:db  (ig/ref :duct.database/sql)
+             :sql ["SELECT * FROM comments"]}})))
+
+  (testing "query-one"
+    (is (= (ig/prep {::sql/query
+                     {:request '{{:keys [id]} :route-params}
+                      :sql     '["SELECT subject, body FROM posts WHERE id = ?" id]}})
+           {::sql/query
+            {:db      (ig/ref :duct.database/sql)
+             :request '{{:keys [id]} :route-params}
+             :sql     '["SELECT subject, body FROM posts WHERE id = ?" id]}})))
+
+  (testing "execute"
+    (is (= (ig/prep {::sql/query
+                     {:request '{{:keys [id]} :route-params, {:strs [body]} :form-params}
+                      :sql     '["UPDATE comments SET body = ? WHERE id = ?" body id]}})
+           {::sql/query
+            {:db      (ig/ref :duct.database/sql)
+             :request '{{:keys [id]} :route-params, {:strs [body]} :form-params}
+             :sql     '["UPDATE comments SET body = ? WHERE id = ?" body id]}})))
+
+  (testing "insert"
+    (is (= (ig/prep {::sql/query
+                     {:request  '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
+                      :sql      '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]
+                      :location "/posts{/pid}/comments{/last_insert_rowid}"}})
+           {::sql/query
+            {:db       (ig/ref :duct.database/sql)
+             :request  '{{:keys [pid]} :route-params, {:strs [body]} :form-params}
+             :sql      '["INSERT INTO comments (post_id, body) VALUES (?, ?)" pid body]
+             :location "/posts{/pid}/comments{/last_insert_rowid}"}}))))
+
 (deftest query-test
   (testing "with destructuring"
     (let [config  {::sql/query
