@@ -1,4 +1,4 @@
-(defproject duct/handler.sql "0.3.1"
+(defproject duct/handler.sql "0.4.0"
   :description "Duct library for building simple database-driven handlers"
   :url "https://github.com/duct-framework/handler.sql"
   :license {:name "Eclipse Public License"
