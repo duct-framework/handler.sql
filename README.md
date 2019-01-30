@@ -44,6 +44,14 @@ identifier for the handler.
 The `:db` option should be a `duct.database.sql.Boundary` record, and
 the `:sql` option should be a [clojure.java.jdbc][] query vector.
 
+If you omit the `:db` option, the `ig/prep` stage will default it to
+`#ig/ref :duct.database/sql`. This means you can write:
+
+```edn
+{[:duct.handler.sql/query :example.handler.product/list]
+ {:sql ["SELECT * FROM products"]}}
+```
+
 If you want to change the query based on the request, you can
 destructure the parameters you want in the `:request` option:
 
